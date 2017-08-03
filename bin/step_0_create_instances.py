@@ -4,6 +4,7 @@ import mne
 import os
 import re
 import glob
+import numpy as np
 import pandas as pd
 
 mne.set_log_level("WARNING")
@@ -109,8 +110,9 @@ def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-
 
             for i, (trial, event) in enumerate(zip(epochs, events)):
                 instance_id = "{}_{}".format(subject_id, i)
-                instance_filename = os.path.abspath("output/np/{}.npy".format(instance_id))
+                instance_filename = os.path.abspath("output/npy/{}.npy".format(instance_id))
 
+                np.save(instance_filename, trial)
                 instances.append({
                     'id': instance_id,
                     'subject_id': subject_id,
