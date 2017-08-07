@@ -107,6 +107,7 @@ def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-
         try:
             subject_id = get_subject_id(filename)
             epochs, events = get_epochs_from(filename)
+
             for i, (trial, event) in enumerate(zip(epochs, events)):
                 instance_id = "{}_{}".format(subject_id, i)
                 instance_filename = os.path.abspath("output/npy/{}.npy".format(instance_id))
