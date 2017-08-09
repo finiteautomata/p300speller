@@ -8,7 +8,7 @@ from . import BaseTransformer
 class FrequencyExtractor(BaseTransformer):
     """Extractor of plain frequencies."""
 
-    def __init__(self, min_freq=1, max_freq=20):
+    def __init__(self, min_freq=1, max_freq=20, fs=128):
         """Constructor.
 
         Parameters:
@@ -19,6 +19,7 @@ class FrequencyExtractor(BaseTransformer):
         """
         self.min_freq = min_freq
         self.max_freq = max_freq
+        self.fs = fs
 
     def get_feature_names(self):
         """Return name for features."""
@@ -36,7 +37,7 @@ class FrequencyExtractor(BaseTransformer):
         x: np.array of channels
             array of nchannels x samples
         """
-        self.freqs, magnitudes = welch(x, fs=128, nperseg=100)
+        self.freqs, magnitudes = welch(x, fs=self.fs, nperseg=50)
 
         # Remove frequencies not wanted
         max_idx = np.argmax(self.freqs > self.max_freq)  # No more than x hz

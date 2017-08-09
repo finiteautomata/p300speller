@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.abspath("."))
 import fire
 import mne
 from sklearn_pandas import DataFrameMapper
-from p300.feature_extraction import FrequencyExtractor, LoadArray
-from sklearn.pipeline import make_pipeline
+from p300.feature_extraction import FrequencyExtractor, LoadArray, SubsamplingExtractor
+from sklearn.pipeline import make_pipeline, make_union
 import pandas as pd
 
 mne.set_log_level("WARNING")
@@ -34,11 +34,14 @@ def create_instances(input_csv="output/output.csv",
         ('array_path', LoadArray()),
     ], input_df=True)
 
-    pipe = make_pipeline(load_array, FrequencyExtractor())
+    pipe = make_pipeline(
+        load_array,
+        make_union(FrequencyExtractor(), SubsamplingExtractor(4)),
+    )
 
     print("Extracting features")
     features = pipe.fit_transform(df)
-    feature_names = pipe.named_steps['frequencyextractor'].get_feature_names()
+    feature_names = pipe.steps[-1][1].get_feature_names()
 
     df_features = pd.DataFrame(features, columns=feature_names)
 
@@ -46,6 +49,8 @@ def create_instances(input_csv="output/output.csv",
         df,
         df_features
     ], axis=1)
+
+    output.set_index("id", inplace=True)
     output.to_csv(output_path)
 
     print("Features saved at {}".format(output_path))
