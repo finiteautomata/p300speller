@@ -40,7 +40,6 @@ def get_epochs_from(filename):
     """
     def event_id_func(x):
         return 1 if x == "0" else 2
-    event_id = {"D": 1, "T": 2}
 
     print("Extracting epochs from {}".format(filename))
 
@@ -60,7 +59,15 @@ def get_epochs_from(filename):
 
     events = mne.find_events(data_mne)
     baseline = (None, 0)
-    # Build epochs
+    """
+    Build epochs
+
+    D is distractor
+    T is target
+
+    Note: I guess this is of no use...
+    """
+    event_id = {"D": 1, "T": 2}
     epochs = mne.Epochs(data_mne, events, event_id, baseline=baseline, tmin=-0.1, tmax=0.7)
     epochs.load_data()
 
@@ -119,6 +126,7 @@ def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-
                     'index': i,
                     'event_time': event[0],
                     'event_type': event[2],
+                    'target': event[2] == 2,
                     'array_path': instance_filename,
                     'sfreq': epochs.info.get('sfreq'),
                     'ch_names': ",".join(epochs.ch_names),
