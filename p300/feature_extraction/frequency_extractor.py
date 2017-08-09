@@ -22,6 +22,7 @@ class FrequencyExtractor(BaseTransformer):
 
     def get_feature_names(self):
         """Return name for features."""
+        # TODO: remove this hardcoded stuff!
         channel_names = "AF3,F7,F3,FC5,T7,P7,O1,O2,P8,T8,FC6,F4,F8,AF4".split(",")
 
         return ["{}_{}hz".format(ch_name, str(f)) for ch_name in channel_names for f in self.freqs]
