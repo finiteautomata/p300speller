@@ -97,7 +97,7 @@ def get_subject_id(path):
 
 
 def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-datos/sets/",
-                     output_path="output/output.csv"):
+                     output_path="output/preinstances.csv"):
     """Create instances from Raw EEG files.
 
     Parameters:
@@ -139,6 +139,7 @@ def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-
     df = pd.DataFrame(instances)
     df.set_index("id", inplace=True)
     df.to_csv(output_path)
+    print("Preinstances saved to {}".format(output_path))
 
 
 if __name__ == '__main__':
