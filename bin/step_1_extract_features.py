@@ -8,13 +8,42 @@ import fire
 import mne
 from sklearn_pandas import DataFrameMapper
 from p300.feature_extraction import FrequencyExtractor, LoadArray, SubsamplingExtractor
-from sklearn.pipeline import make_pipeline, make_union
+from sklearn.pipeline import make_pipeline, FeatureUnion
 import pandas as pd
 
 mne.set_log_level("WARNING")
 
 
-def create_instances(input_csv="output/output.csv",
+def create_frequency_extractors(window_sizes):
+    """Create frequency extractor."""
+    def make_tuple(window_size):
+        name = 'freq_ws_{}'.format(window_size)
+        return (name, FrequencyExtractor(window=window_size))
+
+    return [make_tuple(window_size) for window_size in window_sizes]
+
+
+def create_extractor():
+    """Create feature extractor."""
+    load_array = DataFrameMapper([
+        ('array_path', LoadArray()),
+    ], input_df=True)
+
+    windows = [10, 20, 30, 50, 100]
+
+    feature_union = FeatureUnion(
+        create_frequency_extractors(windows) + [('ss_4', SubsamplingExtractor(4))]
+    )
+
+    pipe = make_pipeline(
+        load_array,
+        feature_union
+    )
+
+    return pipe
+
+
+def create_instances(input_csv="output/preinstances.csv",
                      output_path="output/instances.csv"):
     """Feature extraction from  Raw EEG files.
 
@@ -30,14 +59,7 @@ def create_instances(input_csv="output/output.csv",
     print("Reading csv from {}".format(input_csv))
     df = pd.read_csv(input_csv)
 
-    load_array = DataFrameMapper([
-        ('array_path', LoadArray()),
-    ], input_df=True)
-
-    pipe = make_pipeline(
-        load_array,
-        make_union(FrequencyExtractor(), SubsamplingExtractor(4)),
-    )
+    pipe = create_extractor()
 
     print("Extracting features")
     features = pipe.fit_transform(df)

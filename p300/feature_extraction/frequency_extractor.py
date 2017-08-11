@@ -8,18 +8,25 @@ from . import BaseTransformer
 class FrequencyExtractor(BaseTransformer):
     """Extractor of plain frequencies."""
 
-    def __init__(self, min_freq=1, max_freq=20, fs=128):
+    def __init__(self, min_freq=1, max_freq=20, fs=128, window=50):
         """Constructor.
 
         Parameters:
         ----------
 
-        passband: tuple of floats
-            Passband to be returned
+        min_freq: floats
+            Highpass frequency
+        max_freq: float
+            Lowpass frequency
+        fs: int
+            Frequency of Sampling
+        window: int (defaults to 50)
+            Number of samples used in Welch method
         """
         self.min_freq = min_freq
         self.max_freq = max_freq
         self.fs = fs
+        self.window = window
 
     def get_feature_names(self):
         """Return name for features."""
@@ -37,7 +44,8 @@ class FrequencyExtractor(BaseTransformer):
         x: np.array of channels
             array of nchannels x samples
         """
-        self.freqs, magnitudes = welch(x, fs=self.fs, nperseg=50)
+        print("Doing welch with passband = ({}, {}) and nperseg = {}".format(self.min_freq, self.max_freq, self.window))
+        self.freqs, magnitudes = welch(x, fs=self.fs, nperseg=self.window)
 
         # Remove frequencies not wanted
         max_idx = np.argmax(self.freqs > self.max_freq)  # No more than x hz
