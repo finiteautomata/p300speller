@@ -2,14 +2,13 @@
 import sys
 import os
 # Change
-sys.path.insert(0, os.path.abspath("."))
-
 import fire
 import mne
 from sklearn_pandas import DataFrameMapper
-from p300.feature_extraction import FrequencyExtractor, LoadArray, SubsamplingExtractor
 from sklearn.pipeline import make_pipeline, FeatureUnion
 import pandas as pd
+sys.path.insert(0, os.path.abspath("."))
+from p300.feature_extraction import FrequencyExtractor, LoadArray, SubsamplingExtractor
 
 mne.set_log_level("WARNING")
 
@@ -32,7 +31,8 @@ def create_extractor():
     windows = [10, 20, 30, 50, 100]
 
     feature_union = FeatureUnion(
-        create_frequency_extractors(windows) + [('ss_4', SubsamplingExtractor(4))]
+        create_frequency_extractors(windows) +
+        [('ss_4', SubsamplingExtractor(4))]
     )
 
     pipe = make_pipeline(
@@ -43,8 +43,8 @@ def create_extractor():
     return pipe
 
 
-def create_instances(input_csv="output/preinstances.csv",
-                     output_path="output/instances.csv"):
+def create_instances(input_path="output/instances.h5"
+):
     """Feature extraction from  Raw EEG files.
 
     Parameters:
@@ -56,27 +56,26 @@ def create_instances(input_csv="output/preinstances.csv",
     output_csv: string
         Where to output
     """
-    print("Reading csv from {}".format(input_csv))
-    df = pd.read_csv(input_csv)
+    print("Reading from {}".format(input_path))
+    hdf = pd.HDFStore(input_path)
 
-    pipe = create_extractor()
+    for key in hdf.keys():
+        print("Extracting features from {}".format(key))
 
-    print("Extracting features")
-    features = pipe.fit_transform(df)
-    feature_names = pipe.steps[-1][1].get_feature_names()
+        df = hdf.get(key)
+        pipe = create_extractor()
+        features = pipe.fit_transform(df)
+        feature_names = pipe.steps[-1][1].get_feature_names()
 
-    df_features = pd.DataFrame(features, columns=feature_names)
+        df_features = pd.DataFrame(features, columns=feature_names)
 
-    output = pd.concat([
-        df,
-        df_features
-    ], axis=1)
+        output = pd.concat([
+            df,
+            df_features
+        ], axis=1)
 
-    output.set_index("id", inplace=True)
-    output.to_csv(output_path)
-
-    print("Features saved at {}".format(output_path))
-
+        hdf.put(key, output, format='t')
+    hdf.close()
 
 if __name__ == '__main__':
     fire.Fire(create_instances)

@@ -104,7 +104,7 @@ def get_subject_id(path):
 
 
 def create_instances(path_to_sets=CORPORA_PATH,
-                     output_path="output/preinstances.h5"):
+                     output_path="output/instances.h5"):
     """Create instances from Raw EEG files.
 
     Parameters:
@@ -146,9 +146,8 @@ def create_instances(path_to_sets=CORPORA_PATH,
                 })
 
             df = pd.DataFrame(instances)
-            df.set_index("id", inplace=True)
 
-            hdf.put("subjects/s{}".format(subject_id), df)
+            hdf.put("subjects/s{}".format(subject_id), df, format='t')
         except ValueError as e:
             print("*** {}".format(e))
             continue
