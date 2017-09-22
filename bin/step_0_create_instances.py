@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 mne.set_log_level("WARNING")
+CORPORA_PATH = "~/projects/corpora/P3Speller/P3Speller-old-y-datos/sets/"
 
 
 def get_epochs_from(filename):
@@ -43,7 +44,10 @@ def get_epochs_from(filename):
 
     print("Extracting epochs from {}".format(filename))
 
-    data_mne = mne.io.read_raw_eeglab(filename, event_id_func=event_id_func, preload=True)
+    data_mne = mne.io.read_raw_eeglab(
+        filename,
+        event_id_func=event_id_func,
+        preload=True)
     data_mne.filter(1, 20)
 
     """
@@ -68,12 +72,15 @@ def get_epochs_from(filename):
     Note: I guess this is of no use...
     """
     event_id = {"D": 1, "T": 2}
-    epochs = mne.Epochs(data_mne, events, event_id, baseline=baseline, tmin=-0.1, tmax=0.7)
+    epochs = mne.Epochs(
+        data_mne, events, event_id,
+        baseline=baseline, tmin=-0.1, tmax=0.7)
     epochs.load_data()
 
     if len(events) != len(epochs):
         # We've got a problem here
-        raise ValueError("Events and epochs do not match in {}".format(filename))
+        msg = "Events and epochs do not match in {}".format(filename)
+        raise ValueError(msg)
 
     return epochs, events
 
@@ -96,8 +103,8 @@ def get_subject_id(path):
     return match.groups()[0]
 
 
-def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-datos/sets/",
-                     output_path="output/preinstances.csv"):
+def create_instances(path_to_sets=CORPORA_PATH,
+                     output_path="output/preinstances.h5"):
     """Create instances from Raw EEG files.
 
     Parameters:
@@ -110,14 +117,20 @@ def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-
     files = glob.glob(os.path.join(file_path, "*.set"))
 
     instances = []
+
+    hdf = pd.HDFStore(output_path)
+
     for filename in files:
         try:
+            instances = []
+
             subject_id = get_subject_id(filename)
             epochs, events = get_epochs_from(filename)
 
             for i, (trial, event) in enumerate(zip(epochs, events)):
                 instance_id = "{}_{}".format(subject_id, i)
-                instance_filename = os.path.abspath("output/npy/{}.npy".format(instance_id))
+                instance_filename = "output/npy/{}.npy".format(instance_id)
+                instance_filename = os.path.abspath(instance_filename)
 
                 np.save(instance_filename, trial)
                 instances.append({
@@ -132,13 +145,15 @@ def create_instances(path_to_sets="~/projects/corpora/P3Speller/P3Speller-old-y-
                     'ch_names': ",".join(epochs.ch_names),
                 })
 
+            df = pd.DataFrame(instances)
+            df.set_index("id", inplace=True)
+
+            hdf.put("subjects/s{}".format(subject_id), df)
         except ValueError as e:
             print("*** {}".format(e))
             continue
 
-    df = pd.DataFrame(instances)
-    df.set_index("id", inplace=True)
-    df.to_csv(output_path)
+    hdf.close()
     print("Preinstances saved to {}".format(output_path))
 
 
