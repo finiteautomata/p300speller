@@ -80,6 +80,7 @@ def get_epochs_from(filename):
 
     return epochs, events
 
+
 def get_subject_id(path):
     """
     Return subject id from path to .set file
@@ -96,3 +97,28 @@ def get_subject_id(path):
         raise ValueError("*** File path does not match 'name_id.set' pattern")
 
     return match.groups()[0]
+
+
+def create_instances_from(filename):
+    subject_id = get_subject_id(filename)
+    epochs, events = get_epochs_from(filename)
+    instances = []
+    for i, (trial, event) in enumerate(zip(epochs, events)):
+        instance_id = "{}_{}".format(subject_id, i)
+        instance_filename = "output/npy/{}.npy".format(instance_id)
+        instance_filename = os.path.abspath(instance_filename)
+
+        np.save(instance_filename, trial)
+        instances.append({
+            'id': instance_id,
+            'subject_id': subject_id,
+            'index': i,
+            'event_time': event[0],
+            'event_type': event[2],
+            'target': event[2] == 2,
+            'array_path': instance_filename,
+            'sfreq': epochs.info.get('sfreq'),
+            'ch_names': ",".join(epochs.ch_names),
+        })
+
+    return pd.DataFrame(instances)
