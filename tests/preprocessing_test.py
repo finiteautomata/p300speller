@@ -29,7 +29,7 @@ class SubsamplingExtractorTest(unittest.TestCase):
         X_subsampled = extractor.transform(X)
 
         # 14 is for the fixed number of channels
-        self.assertEqual(14 * 5, len(extractor.feature_names))
+        self.assertEqual(14 * 5, len(extractor.get_feature_names()))
 
     def test_one_dimensional_array(self):
         extractor = SubsamplingExtractor(2)

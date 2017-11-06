@@ -1,14 +1,12 @@
 """Step 0: Create instances from MNE-Raw Files."""
-import sys
+from p300.feature_extraction import LoadArray, SubsamplingExtractor
+from sklearn.pipeline import make_pipeline, FeatureUnion
+from sklearn_pandas import DataFrameMapper
 import os
 # Change
 import fire
 import mne
-from sklearn_pandas import DataFrameMapper
-from sklearn.pipeline import make_pipeline, FeatureUnion
 import pandas as pd
-sys.path.insert(0, os.path.abspath("."))
-from p300.feature_extraction import FrequencyExtractor, LoadArray, SubsamplingExtractor
 
 mne.set_log_level("WARNING")
 
@@ -28,11 +26,8 @@ def create_extractor():
         ('array_path', LoadArray()),
     ], input_df=True)
 
-    windows = [10, 20, 30, 50, 100]
-
     feature_union = FeatureUnion(
-        create_frequency_extractors(windows) +
-        [('ss_4', SubsamplingExtractor(4))]
+        [('ss_10', SubsamplingExtractor(13))]
     )
 
     pipe = make_pipeline(
@@ -43,8 +38,7 @@ def create_extractor():
     return pipe
 
 
-def create_instances(input_path="output/instances.h5"
-):
+def create_instances(input_path="output/instances.h5"):
     """Feature extraction from  Raw EEG files.
 
     Parameters:
