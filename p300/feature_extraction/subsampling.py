@@ -17,7 +17,8 @@ class SubsamplingExtractor(BaseTransformer):
         """
         self.order = order
 
-    def get_feature_names(self):
+    @property
+    def feature_names(self):
         """Return name for features."""
         channel_names = "AF3,F7,F3,FC5,T7,P7,O1,O2,P8,T8,FC6,F4,F8,AF4"
         channel_names = channel_names.split(",")
@@ -37,10 +38,10 @@ class SubsamplingExtractor(BaseTransformer):
             array of nchannels x samples
         """
         sample_length = x.shape[-1]
-        sampled_cumsum = x.cumsum(axis=-1)[:, :, (self.order-1)::self.order]
+        sampled_cumsum = x.cumsum(axis=-1)[..., (self.order-1)::self.order]
 
         avg_cumsum = np.concatenate([
-                sampled_cumsum[:, :, 0][:, :, np.newaxis],
+                sampled_cumsum[..., 0][..., np.newaxis],
                 np.diff(sampled_cumsum),
             ], axis=-1)
 
