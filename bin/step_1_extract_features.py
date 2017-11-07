@@ -27,7 +27,7 @@ def create_extractor():
     ], input_df=True)
 
     feature_union = FeatureUnion(
-        [('ss_10', SubsamplingExtractor(13))]
+        [('subsample_', SubsamplingExtractor(13))]
     )
 
     pipe = make_pipeline(
