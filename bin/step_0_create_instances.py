@@ -51,7 +51,7 @@ def run(path_to_sets=CORPORA_PATH,
             df = create_instances_from(filename)
             subject_id = get_subject_id(filename)
 
-            hdf.put(key, df, append=True, format='t')
+            hdf.append(key, df, format='t', data_columns=["subject_id"])
         except ValueError as e:
             print("*** {}".format(e))
             continue
