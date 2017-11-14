@@ -38,25 +38,30 @@ def create_extractor():
     return pipe
 
 
-def create_instances(input_path="output/instances.h5"):
+def run(input_path="output/instances.h5", key="plain"):
     """Feature extraction from  Raw EEG files.
 
     Parameters:
     -----------
 
-    input_csv: string
-        Path to CSV of instances
+    input_path: string
+        Path to hdf file
 
-    output_csv: string
-        Where to output
+    key: string
+        Key of HDF
     """
     print("Reading from {}".format(input_path))
     hdf = pd.HDFStore(input_path)
 
-    for key in hdf.keys():
-        print("Extracting features from {}".format(key))
+    # TODO: enhance this
+    new_key = key + "_new"
 
-        df = hdf.get(key)
+    subject_ids = hdf.select(key, columns=["subject_id"]).subject_id.unique()
+
+    for subject_id in subject_ids:
+        print("Extracting features from {}".format(subject_id))
+
+        df = hdf.select(key, where='subject_id = "{}"'.format(subject_id))
         pipe = create_extractor()
         features = pipe.fit_transform(df)
         feature_names = pipe.steps[-1][1].get_feature_names()
@@ -67,9 +72,13 @@ def create_instances(input_path="output/instances.h5"):
             df,
             df_features
         ], axis=1)
+        hdf.append(new_key, output, format='t', data_columns=["subject_id"])
 
-        hdf.put(key, output, format='t')
+    hdf[key] = hdf[new_key]
+    hdf.remove(new_key)
     hdf.close()
 
 if __name__ == '__main__':
-    fire.Fire(create_instances)
+    fire.Fire({
+        "run": run
+    })
