@@ -17,8 +17,9 @@ mne.set_log_level("WARNING")
 CORPORA_PATH = "~/projects/corpora/P3Speller/P3Speller-old-y-datos/sets/"
 
 
-def create_instances(path_to_sets=CORPORA_PATH,
-                     output_path="output/instances.h5"):
+def run(path_to_sets=CORPORA_PATH,
+                     output_path="output/instances.h5",
+                     key="subjects"):
     """Create instances from Raw EEG files.
 
     Parameters:
@@ -26,6 +27,12 @@ def create_instances(path_to_sets=CORPORA_PATH,
 
     path_to_sets: string
         Path to directory containing .set files
+
+    output_path: path
+        Path to HDF file
+
+    key: string
+        Key to store in the hdf
     """
     file_path = os.path.expanduser(path_to_sets)
     files = glob.glob(os.path.join(file_path, "*.set"))
@@ -34,12 +41,17 @@ def create_instances(path_to_sets=CORPORA_PATH,
 
     hdf = pd.HDFStore(output_path)
 
+    try:
+        hdf.remove(key)
+    except:
+        pass
+
     for filename in files:
         try:
             df = create_instances_from(filename)
             subject_id = get_subject_id(filename)
 
-            hdf.put("subjects/s{}".format(subject_id), df, format='t')
+            hdf.put(key, df, append=True, format='t')
         except ValueError as e:
             print("*** {}".format(e))
             continue
@@ -49,4 +61,4 @@ def create_instances(path_to_sets=CORPORA_PATH,
 
 
 if __name__ == '__main__':
-    fire.Fire(create_instances)
+    fire.Fire({"run": run})
