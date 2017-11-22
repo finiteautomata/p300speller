@@ -74,7 +74,14 @@ def run(input_path="output/instances.h5", key="plain"):
         ], axis=1)
         hdf.append(new_key, output, format='t', data_columns=["subject_id"])
 
-    hdf[key] = hdf[new_key]
+    # If you do hdf[key] = hdf[new_key] it won't set it as 'tables'
+    hdf.put(
+        key,
+        hdf.select(new_key),
+        format='t',
+        data_columns=["subject_id"]
+    )
+
     hdf.remove(new_key)
     hdf.close()
 
