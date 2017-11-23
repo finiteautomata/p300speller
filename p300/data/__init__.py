@@ -1,13 +1,8 @@
 """Data handling package."""
-
-
+from .store import Store
 non_features = [
     'id', 'array_path', 'ch_names', 'event_time', 'event_type', 'index',
     'sfreq', 'subject_id', 'target']
-
-
-def get_subject_ids(hdf, data_key):
-    return hdf.select(data_key, columns=["subject_id"]).subject_id.unique()
 
 
 def get_data_for(hdf, data_key, subject_id):
