@@ -64,6 +64,31 @@ class Store:
 
         return self.hdf.get(self._group_for(subject_id))
 
+    def get_subject_features(self, subject_id):
+        """Get data from specific subject."""
+        non_features = [
+            'id', 'array_path', 'ch_names', 'event_time',
+            'event_type', 'index', 'sfreq', 'subject_id', 'target'
+        ]
+
+        df = self.get_subject_data(subject_id)
+        X = df[df.columns.difference(non_features)]
+        y = df.target.as_matrix()
+
+        return X.as_matrix(), y
+
+    # TODO: Remove this stuff of asking subject id...
+    def get_feature_names(self, subject_id):
+        non_features = [
+            'id', 'array_path', 'ch_names', 'event_time',
+            'event_type', 'index', 'sfreq', 'subject_id', 'target'
+        ]
+
+        df = self.get_subject_data(subject_id)
+        X = df[df.columns.difference(non_features)]
+        return X.columns
+
+
 
     """ with's enter and exit function."""
     def __enter__(self):

@@ -61,6 +61,7 @@ def extract_features_for(store, subject_id):
 
     store.put_subject_data(subject_id, output)
 
+
 def run(input_path="output/instances.h5", group="default"):
     """Feature extraction from  Raw EEG files.
 
@@ -78,6 +79,7 @@ def run(input_path="output/instances.h5", group="default"):
     with Store(input_path, group) as store:
         for subject_id in store.subject_ids:
             extract_features_for(store, subject_id)
+
 
 if __name__ == '__main__':
     fire.Fire({
