@@ -26,11 +26,9 @@ class Store:
         except:
             pass
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        return self.hdf.close()
+    def _group_for(self, subject_id):
+        """Return group for given subject."""
+        return "{}/s_{}".format(self.group, subject_id)
 
     def put_subject_data(self, subject_id, data):
         """Save subject data
@@ -44,5 +42,32 @@ class Store:
         data: pandas.DataFrame
             Data to be saved
         """
-        key = "{}/s_{}".format(self.group, subject_id)
-        self.hdf.put(key, data)
+
+        self.hdf.put(self._group_for(subject_id), data)
+
+    def get_subject_data(self, subject_id):
+        """Get subject data
+
+        Parameters
+        ----------
+
+        subject_id: String
+            Subject id
+
+
+        Returns
+        -------
+
+        data: pandas.DataFrame
+            Data to be saved
+        """
+
+        return self.hdf.get(self._group_for(subject_id))
+
+
+    """ with's enter and exit function."""
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        return self.hdf.close()

@@ -1,5 +1,10 @@
 """Step 0: Create instances from MNE-Raw Files."""
-from p300.feature_extraction import LoadArray, SubsamplingExtractor
+from p300.feature_extraction import (
+    LoadArray,
+    SubsamplingExtractor,
+    WaveletExtractor
+)
+from p300.data import Store
 from sklearn.pipeline import make_pipeline, FeatureUnion
 from sklearn_pandas import DataFrameMapper
 import os
@@ -26,9 +31,10 @@ def create_extractor():
         ('array_path', LoadArray()),
     ], input_df=True)
 
-    feature_union = FeatureUnion(
-        [('subsample_', SubsamplingExtractor(13))]
-    )
+    feature_union = FeatureUnion([
+        ('subsample_', SubsamplingExtractor(13)),
+        ('wavelets_', WaveletExtractor())
+    ])
 
     pipe = make_pipeline(
         load_array,
@@ -38,7 +44,24 @@ def create_extractor():
     return pipe
 
 
-def run(input_path="output/instances.h5", key="plain"):
+def extract_features_for(store, subject_id):
+    print("Extracting features from {}".format(subject_id))
+
+    df = store.get_subject_data(subject_id)
+    pipe = create_extractor()
+    features = pipe.fit_transform(df)
+    feature_names = pipe.steps[-1][1].get_feature_names()
+
+    df_features = pd.DataFrame(features, columns=feature_names)
+
+    output = pd.concat([
+        df,
+        df_features
+    ], axis=1)
+
+    store.put_subject_data(subject_id, output)
+
+def run(input_path="output/instances.h5", group="default"):
     """Feature extraction from  Raw EEG files.
 
     Parameters:
@@ -47,43 +70,14 @@ def run(input_path="output/instances.h5", key="plain"):
     input_path: string
         Path to hdf file
 
-    key: string
-        Key of HDF
+    group: string
+        group of HDF
     """
-    print("Reading from {}".format(input_path))
-    hdf = pd.HDFStore(input_path)
+    print("Reading from {} at group {}".format(input_path, group))
 
-    # TODO: enhance this
-    new_key = key + "_new"
-
-    subject_ids = hdf.select(key, columns=["subject_id"]).subject_id.unique()
-
-    for subject_id in subject_ids:
-        print("Extracting features from {}".format(subject_id))
-
-        df = hdf.select(key, where='subject_id = "{}"'.format(subject_id))
-        pipe = create_extractor()
-        features = pipe.fit_transform(df)
-        feature_names = pipe.steps[-1][1].get_feature_names()
-
-        df_features = pd.DataFrame(features, columns=feature_names)
-
-        output = pd.concat([
-            df,
-            df_features
-        ], axis=1)
-        hdf.append(new_key, output, format='t', data_columns=["subject_id"])
-
-    # If you do hdf[key] = hdf[new_key] it won't set it as 'tables'
-    hdf.put(
-        key,
-        hdf.select(new_key),
-        format='t',
-        data_columns=["subject_id"]
-    )
-
-    hdf.remove(new_key)
-    hdf.close()
+    with Store(input_path, group) as store:
+        for subject_id in store.subject_ids:
+            extract_features_for(store, subject_id)
 
 if __name__ == '__main__':
     fire.Fire({
