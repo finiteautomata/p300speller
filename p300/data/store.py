@@ -13,7 +13,7 @@ class Store:
         regex = "^/{}/".format(self.group)
 
         def get_sid(key):
-            return key.split("_")[1]
+            return key.split("/")[-1].split("_")[1]
 
         return [
              get_sid(key) for key in self.hdf.keys()
@@ -26,11 +26,12 @@ class Store:
         except:
             pass
 
-    def _group_for(self, subject_id):
+    def _group_for(self, subject_id, group=None):
         """Return group for given subject."""
-        return "{}/s_{}".format(self.group, subject_id)
+        group = group or self.group
+        return "{}/s_{}".format(group, subject_id)
 
-    def put_subject_data(self, subject_id, data):
+    def put_subject_data(self, subject_id, data, group=None):
         """Save subject data
 
         Parameters
@@ -41,9 +42,12 @@ class Store:
 
         data: pandas.DataFrame
             Data to be saved
+
+        group: String
+            Group to save the data in. If None, use default super group
         """
 
-        self.hdf.put(self._group_for(subject_id), data)
+        self.hdf.put(self._group_for(subject_id, group=group), data)
 
     def get_subject_data(self, subject_id):
         """Get subject data
@@ -90,7 +94,6 @@ class Store:
 
     def put(self, *args, **kwargs):
         return self.hdf.put(*args, **kwargs)
-
 
     """ with's enter and exit function."""
     def __enter__(self):

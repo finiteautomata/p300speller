@@ -29,8 +29,11 @@ def run(input_path="output/instances.h5", group="default", sample_size=10):
         sample_ids = np.random.choice(store.subject_ids, sample_size)
 
         for subject_id in sample_ids:
-            group = "{}/{}".format(sample_group, subject_id)
-            store.put(group, store.get_subject_data(subject_id))
+            store.put_subject_data(
+                subject_id,
+                store.get_subject_data(subject_id),
+                group=sample_group
+            )
 
     print("{} subjects saved to {}".format(sample_size, sample_group))
 
