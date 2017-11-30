@@ -88,6 +88,8 @@ class Store:
         X = df[df.columns.difference(non_features)]
         return X.columns
 
+    def put(self, *args, **kwargs):
+        return self.hdf.put(*args, **kwargs)
 
 
     """ with's enter and exit function."""
