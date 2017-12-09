@@ -1,35 +1,25 @@
 """Store class."""
 import pandas as pd
 import re
+from .strategies import DifferentGroupStrategy
 
 class Store:
     """Interface to storage."""
-    def __init__(self, path, group):
+    def __init__(self, path, group, strategy_class=None):
         self.hdf = pd.HDFStore(path)
+        strategy_class = strategy_class or DifferentGroupStrategy
         self.group = group
+        self.strategy = strategy_class(self.hdf, group)
 
     @property
     def subject_ids(self):
-        regex = "^/{}/".format(self.group)
-
-        def get_sid(key):
-            return key.split("/")[-1].split("_")[1]
-
-        return [
-             get_sid(key) for key in self.hdf.keys()
-             if re.match(regex, key)
-        ]
+        return strategy.subject_ids
 
     def clean(self):
         try:
             self.hdf.remove(self.group)
         except:
             pass
-
-    def _group_for(self, subject_id, group=None):
-        """Return group for given subject."""
-        group = group or self.group
-        return "{}/s_{}".format(group, subject_id)
 
     def put_subject_data(self, subject_id, data, group=None):
         """Save subject data
@@ -46,8 +36,7 @@ class Store:
         group: String
             Group to save the data in. If None, use default super group
         """
-
-        self.hdf.put(self._group_for(subject_id, group=group), data)
+        return self.strategy.put_subject_data(subject_id, data, group=group)
 
     def get_subject_data(self, subject_id):
         """Get subject data
@@ -66,7 +55,7 @@ class Store:
             Data to be saved
         """
 
-        return self.hdf.get(self._group_for(subject_id))
+        return self.strategy.get_subject_data(subject_id)
 
     def get_subject_features(self, subject_id):
         """Get data from specific subject."""
