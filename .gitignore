@@ -103,3 +103,10 @@ ENV/
 .mypy_cache/
 tmp/*
 *.h5
+*.fls
+*.out
+*.pdf
+*.fdb_latexmk
+*.bbl
+*.aux
+*.blg
