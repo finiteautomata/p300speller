@@ -110,3 +110,4 @@ tmp/*
 *.bbl
 *.aux
 *.blg
+*.png
