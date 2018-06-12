@@ -52,4 +52,7 @@ def load_data(filenames):
                 y = np.vstack((y.reshape(-1,1), y_subject.reshape(-1,1)))
         except ValueError as e:
             print(e)
+    
+    X = X[:, :, :, np.newaxis]        
+    
     return X, y
