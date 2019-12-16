@@ -75,7 +75,7 @@ sklearn-pandas==1.5.0
 smmap2==2.0.3
 tables==3.4.2
 tensorboard==1.8.0
-tensorflow-gpu==1.8.0
+tensorflow-gpu==1.15.0
 tensorflow-tensorboard==0.4.0rc3
 termcolor==1.1.0
 terminado==0.6
